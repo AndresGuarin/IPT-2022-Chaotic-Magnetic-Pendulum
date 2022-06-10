@@ -7,6 +7,8 @@ import CMPendulum.solver.pendulum as pend
 import CMPendulum.solver.animation as ani
 import matplotlib.pyplot as plt
 
+import CMPendulum.analysis.basins as bs
+
 #Put on the console for animation %matplotlib auto
 
 #Create pendulum
@@ -18,17 +20,19 @@ selfp = p.get_self()
 
 #Plot trajectories
 p.plot_table()              
-#p.plot_vector_space(res=30)
+p.plot_vector_space(res=30)
 p.plot_path()
-plt.savefig('path.png',dpi=200)
+plt.legend(loc='upper right')
+#plt.savefig('path.png',dpi=200)
 
 #Animate movement
 ani.animate_path(selfp)
 
 #Plot potential, table,...
 p.plot_potential(res=50)
-plt.savefig('potential.png',dpi=200)
+#plt.savefig('potential.png',dpi=200)
 p.plot_alltable()
-plt.savefig('alltable.png',dpi=200)
+plt.legend(loc='upper right')
+#plt.savefig('alltable.png',dpi=200)
 
 print('Done')

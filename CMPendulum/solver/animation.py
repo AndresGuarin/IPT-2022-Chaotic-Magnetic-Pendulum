@@ -7,7 +7,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-def animate_path(self):
+def animate_path(self,save={'on':False}):
+    """
+    @params:
+        self: self object that contains the data of 
+              CMPendulum.solver.pendulum.pendulum() object
+        save: dictionary that contains the name of the video
+              and enable or disble the saving process
+              
+              save={'on':True, 'name':'name.mp4'}
+    """
     
     #local function for update each frame
     def update(j):
@@ -69,5 +78,9 @@ def animate_path(self):
     # Animate the movement
     self.ani=animation.FuncAnimation(fig,update,range(10,N,steps), repeat=False) 
     
-    # Show animation
-    plt.show()
+    if save['on']:
+        self.ani.save(save['name'],writer='ffmpeg')
+        plt.show(self.ani)
+    else: 
+        # Show animation
+        plt.show()
