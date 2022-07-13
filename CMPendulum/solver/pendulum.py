@@ -148,6 +148,8 @@ class pendulum:
             return self.X[-1], self.Y[-1], self.Vx[-1], self.Vy[-1]
         elif Return == 'pos':
             return self.X, self.Y, self.Vx, self.Vy
+        elif Return == 'none':
+            pass
 
     def plot_path(self):
         # Plot trajectory

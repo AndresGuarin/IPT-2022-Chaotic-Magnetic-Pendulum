@@ -1,8 +1,8 @@
-import numpy as np
 import time
-from datetime import datetime
-import matplotlib.pyplot as plt
 import pytz
+import numpy as np
+import matplotlib.pyplot as plt
+from datetime import datetime
 
 import CMPendulum.solver.pendulum as pend
 
@@ -95,8 +95,8 @@ class basins:
                 print('[','#'*int(val)+'-'*int(save_n_times-int(val)),']',
                       f'{int(val)}/{save_n_times}',datetime.now(tz).strftime("%H:%M:%S"))
                 aux=int(val)
-                np.savetxt('Mat_advances_x.csv', Mat[:,:,0], delimiter=',')
-                np.savetxt('Mat_advances_y.csv', Mat[:,:,1], delimiter=',')
+                np.savetxt('BasinsData/Mat_advances_x.csv', Mat[:,:,0], delimiter=',')
+                np.savetxt('BasinsData/Mat_advances_y.csv', Mat[:,:,1], delimiter=',')
             
             # Run over each y initial condition
             for j in range(0,len(my)):
@@ -116,8 +116,8 @@ class basins:
                 Mat[i][j][1] = Yf
         
         # Save final data
-        np.savetxt('Mat_x.csv', Mat[:,:,0], delimiter=',')
-        np.savetxt('Mat_y.csv', Mat[:,:,1], delimiter=',')
+        np.savetxt('BasinsData/Mat_x.csv', Mat[:,:,0], delimiter=',')
+        np.savetxt('BasinsData/Mat_y.csv', Mat[:,:,1], delimiter=',')
         
         # Show total time
         fin = time.time()
@@ -129,7 +129,6 @@ class basins:
         """
         @params:
             Ax: array-like
-            Bla bla
 
             Ay: array-like
         @returns:
