@@ -104,7 +104,7 @@ class pendulum:
     def get_self(self):
         return self
     
-    def find_path(self):
+    def find_path(self, Return='pos'):
         # Finding the next steps for each interval
         self.X = [self.x]    #X positions
         self.Y = [self.y]    #Y positions
@@ -144,8 +144,11 @@ class pendulum:
         self.Vx = np.array(self.Vy)
         self.Vy = np.array(self.Vx)
         
-        return self.X, self.Y, self.Vx, self.Vy
-    
+        if Return == 'final pos':
+            return self.X[-1], self.Y[-1], self.Vx[-1], self.Vy[-1]
+        elif Return == 'pos':
+            return self.X, self.Y, self.Vx, self.Vy
+
     def plot_path(self):
         # Plot trajectory
         plt.plot(self.X,self.Y,'-b',linewidth=0.5)
