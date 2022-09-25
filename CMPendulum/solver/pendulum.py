@@ -11,62 +11,188 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class pendulum:
-    def __init__(self):
+    def __init__(self, show=False):
+        # Set predifined values
+        self.set_pendulum()          # Set physical parameters
+        self.set_physics()           # Set physics model and law of motion
+        self.set_code_parameters()   # Set code parameters as number of points
+        self.set_random()            # Set initial positions randomly
+        if show:
+            self.summary()
+            
+    #--------------------------------------1. Create object---------------------------------------#
+    
+    # Set Physical parameters
+    def set_pendulum(self, l=0.54, d=0.03, R=0.01, m=0.04, mu_P_magn=2.0, mu_P_dir=np.array([0,0,-1]),
+                     Table_SIZE = 0.3):
         # System dynamics parameters
-        self.R = 0.01          #friction constant   
-        self.l = 0.54           #Pendulum length
-        self.C = 9.8/self.l    #self-restoring force constant C=g/l
-        self.d = 0.03       #vertical distance between pendulum and magnets
-        self.h = 0.01       #time lapse between each step
-        self.N = 2000       #total number of steps
-        self.m = 0.036226       #Mass of the pendulum magnet
-        self.mu_P_magn = 2       #Magnitude of the magnetic dipole of the pendulum magnet
-        self.mu_P_dir = np.array([0,0,-1])  #Direction of the magnetic dipole of pendulum magnet if it was in (x,y)=(0,0)
-        
+        self.l = l        #Pendulum length
+        self.d = d        #Vertical distance between pendulum and table
+        self.R = R        #Friction constant   
+        self.m = m        #Mass of the pendulum magnet
+        self.mu_P_magn = mu_P_magn   #Magnitude of the magnetic dipole of the pendulum magnet
+        self.mu_P_dir = mu_P_dir     #Direction of the magnetic dipole of pendulum magnet if it was in (x,y)=(0,0)
+        self.Table_SIZE = Table_SIZE
+    
+        # Plot parameters
+        self.lim    = self.Table_SIZE/2 + 0.04     #Limit of the plots
+        self.lim_vs = (self.Table_SIZE + 0.05)/2   #Limit plot of vector space    
+    
         # Other parameters
-        self.sec = 1/self.h #Number of steps that waste one second.
-        self.Table_SIZE = 0.3
-        self.NMAGNETS = np.random.randint(low=1,high=8)
         self.lim = self.Table_SIZE/2 + 0.04         #Limit of the plots
         self.lim_vs = (self.Table_SIZE + 0.05)/2   #Limit plot of vector space
+    
+    # Set integration model and Law of motion (magnetic force between magnets)
+    def set_physics(self,model='RK4',law='F1'):
+        self.model = model  #  RK4, RKF
+        self.law = law
         
-        # Initial velocities
-        self.vx = 0
-        self.vy = 0
+    # Set Code parameters
+    def set_code_parameters(self,h=0.01, N=2000):
+        self.h = 0.01        #Time lapse between each step
+        self.N = 2000        #Total number of steps
+        self.sec = 1/self.h  #Number of steps that waste one second
+    
+    
+    #---------------------------------2. Set initial conditions ----------------------------------#
+    
+    def set_random(self,Nmin=1,Nmax=8, mu=[1.07, 2.05, 1.95, 1.84, 1.64, 1.74, 1.43], u=[np.array([0.66, -0.37, 0.65]), np.array([0.31, -0.35, 0.88]),
+                                                                                         np.array([-0.6, -0.67, 0.44]), np.array([0,0,1]),
+                                                                                         np.array([0,0,-1])]):
+        """
+        @params:
+            Nmin: int, mínimo número de imanes.
+            Nmax: int, máximo número de imanes.
+            mu:   array-like, valores posibles de dipolo magnético.
+            u: array-like, valores posibles de dirección de los imanes.
         
-        # Set initial position randomly    
+        @returns:
+            none
+        
+        """
+        # Table parameters
+        self.NMAGNETS = np.random.randint(low=Nmin,high=Nmax)
+                
+        # Set initial positions
         lm = self.Table_SIZE
         self.x = np.random.rand()*lm -lm/2
         self.y = np.random.rand()*lm -lm/2
-              
-        # Create table
+        self.coordinates = 'cartesians'
+        
+        # Set initial velocities
+        self.vx = 0
+        self.vy = 0
+        
+        # Set magnets positions
         self.Mx = []
         self.My = []
+        self.Mz = []
         for i in range(self.NMAGNETS):
             self.Mx.append(np.random.rand()*self.Table_SIZE - self.Table_SIZE/2)
             self.My.append(np.random.rand()*self.Table_SIZE - self.Table_SIZE/2)
+        self.Mx = np.array(self.Mx)
+        self.My = np.array(self.My)
+        self.Mz = np.zeros(self.NMAGNETS)
         
-        # Create dipoles
-        self.mu = [-1.071875, -2.048, -1.9456, -1.8432, -1.6384, -1.7408, -1.4336]
+        
+        # Set magnet dipoles
         self.mu_magn = []   # Magnitud of the magnetic dipoles
         self.mu_dir = []    # Direction of the magnetic dipoles
-        self.S = [] 
-        self.mu_NUMS=len(self.mu)
+        mu = np.abs(np.array(mu))
+        mu_NUMS=len(mu)
+        u_NUMS = len(u)
         for i in range(self.NMAGNETS): #set the magnetic dipoles to the magnets randomly
+            n1 = np.random.randint(mu_NUMS)
+            n2 = np.random.randint(u_NUMS)
             
-            num = np.random.randint(self.mu_NUMS)
-            mu = self.mu[num]
+            mu1 = mu[n1]
+            u1 = u[n2]
             
-            self.S.append(np.abs(mu))
-            self.mu_magn.append(np.abs(mu))
-            self.mu_dir.append(np.array([0,0,-1])*np.sign(mu)) #The directions are in the z-axis
+            self.mu_magn.append(mu1)
+            self.mu_dir.append(u1)
         
         self.mu_dir = np.array(self.mu_dir)
-        self.sign = np.array([self.mu_dir[i][2]*-1 for i in range(self.NMAGNETS)])
+        self.mu_magn = np.array(self.mu_magn)
         
-        #Finding S values
-        self.S = np.array(self.S)
-        self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * self.S
+        # Finding force constant
+        if self.law=='F1':
+            self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * self.mu_magn
+    
+    
+    # Set Magnets parameters
+    def set_magnets(self, Mx, My, Mz, mu, u, S=0):
+        self.NMAGNETS = len(Mx)
+        self.Mx = np.array(Mx)
+        self.My = np.array(My)
+        self.Mz = np.array(Mz)
+        self.mu_magn = np.array(mu)
+        self.mu_dir = np.array(u)
+        
+        # Finding force constant
+        if self.law=='F1':
+            self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * self.mu_magn
+        
+    
+    # Set initial conditions
+    def set_initial_conditions(self, CI, coordinates='cartesians'):
+        if coordinates == 'cartesians':       
+            self.x = CI[0]
+            self.y = CI[1]
+            self.vx = CI[2]
+            self.vy = CI[3]
+            
+        if coordinates == 'spherical':
+            theta = CI[0]
+            phi = CI[1]
+            Dtheta = CI[2]
+            Dphi = CI[3]
+            self.x = self.l * np.cos(theta)*np.sin(phi)
+            self.y = self.l * np.sin(theta)*np.sin(phi)
+            self.z = self.l * np.cos(phi)
+            self.vx = - Dtheta*self.y - (self.z*self.x*Dphi)/np.sqrt(self.x**2+self.y**2)
+            self.vy = Dtheta*self.x - (self.z*self.y*Dphi)/np.sqrt(self.x**2+self.y**2)
+            
+        self.coordinates = coordinates
+        self.theta = theta
+        self.phi = phi
+        self.Dtheta = Dtheta
+        self.Dphi = Dphi
+    #---------------------------3. Functions for specific purposes -------------------------------#
+    
+    def summary(self):
+        print('==================================================================')
+        print('====================== Summary report ============================')
+        print('\nPhysical parameters: ')
+        print('   l = ',self.l)
+        print('   d = ',self.d)
+        print('   R = ',self.R)
+        print('   m = ',self.m)
+        print('   mu_P_magn = ',self.mu_P_magn)
+        print('   mu_P_dir  = ',self.mu_P_dir)
+        print('   model = ',self.model)
+        print('   law   = ',self.law)
+        print('==================================================================')
+        print('\nCode parameters:')
+        print('   h = ',self.h)
+        print('   N = ',self.N)
+        print('==================================================================')
+        print('\nInitial values')
+        
+        if self.coordinates == 'cartesians':
+            print('   x  = ',self.x)
+            print('   y  = ',self.y)
+            print('   vx = ',self.vy)
+            print('   vy = ',self.vx)
+        
+        if self.coordinates == 'spherical':
+            print('   theta     = ',self.theta)
+            print('   phi       = ',self.phi)
+            print('   dot theta = ',self.Dtheta)
+            print('   dot phi   = ',self.Dphi)
+        
+        print('   NMAGNETS = ',self.NMAGNETS)
+        print('   mu_magn  = ',self.mu_magn)
+        print('   mu_dir   = ',self.mu_dir)
     
     def set_lim(self, lim):
         self.lim = lim
@@ -76,33 +202,36 @@ class pendulum:
         self.y = CI[1]
         self.vx = CI[2]
         self.vy = CI[3]
-        
         self.Mx = Mx
         self.My = My
         self.NMAGNETS = len(Mx)
         
-    def set_code_parameters(self, m, l, d):
+    def set_physical_parameters(self, m, l, d):
         self.m = m     #Mass of the pendulum
         self.l = l     #lenght of the pendulum
         self.d = d     #Distance between table and pendulum equilibrium position
     
-    def set_magnetic_dipoles(self, mu_P, mu):
-        self.mu_P_magn = np.abs(mu_P)  #Magnitude of the magnetic dipole
-        self.mu_P_dir = np.array([0,0,-1])*np.sign(mu_P) #Direction of the magnetic dipole of pendulum magnet if it was in (x,y)=(0,0)
+    def set_magnetic_dipoles(self, mu_P, mu, u, u_P=np.array([0,0,-1])):
+        self.mu_P_magn = abs(mu_P)          #Magnitude of the magnetic dipole
+        self.mu_P_dir = u_P                 #Direction of the magnetic dipole of pendulum magnet if it was in (x,y)=(0,0)
         self.mu_magn = np.abs(np.array(mu))
         
-        self.mu_dir = [np.array([0,0,-1])*np.sign(mu[i]) for i in range(self.NMAGNETS)] #Direction magnetic dipoles of table magnets
+        self.mu_dir = u #Direction magnetic dipoles of table magnets
         self.mu_dir = np.array(self.mu_dir)
-        self.mu_NUMS=len(self.mu_magn)
-        
-        #Finding S values
-        self.S = np.copy(self.mu_magn)
-        self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi) * self.S
-    
-        self.sign = [np.sign(mu[i]) for i in range(self.NMAGNETS)] #If sign is positive there is atraction; if negative, repulsion
-    
+
+        # Finding force constant
+        if self.model=='F1':
+            self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * self.mu_magn
+
+
+    #-------------------------------------4. Get functions----------------------------------------# 
     def get_self(self):
         return self
+    
+    def get_positions(self):
+        return [self.X, self.Y, self.Vx, self.Vy]
+    
+    #----------------------------------5. Solver equation functions-------------------------------#
     
     def find_path(self, Return='pos'):
         # Finding the next steps for each interval
@@ -151,6 +280,115 @@ class pendulum:
         elif Return == 'none':
             pass
 
+    def Fk(self,x,y,vx,vy):
+        """
+        Calculates the velocity and acelerations based on the initial conditions of the magnets 
+        @params
+        mx, my:
+            arrays of doubles that contains the position of the magnets
+        x,y,vx,vy:
+            doubles of the position and velocity of the pendulum magnet
+
+        @returns
+        vx, vy ,ax, ay:
+            doubles that contains the velocity and aceleration based on the given inputs
+        """ 
+        
+        # z component of pendulum magnet
+        z = -np.sqrt(self.l**2-x**2-y**2)+self.l+self.d       
+        
+        # Magnetic dipole vector m1 of pendulum magnet.     
+        
+        # Vector from Q to P
+        rqp = np.array([x,y,z-self.l-self.d])
+        
+        # Sign that indicates the orientation of the pendulum magnet
+        sign = -self.mu_P_dir[2]
+        
+        # Magnetic dipole
+        m1 = sign * rqp/self.l
+        
+        # Finidng the sum of the magnetic forces
+        Fb = np.array([0,0,0])
+        for i in range(self.NMAGNETS):
+            #Squared distance between pendulum and table magnet
+            r = (self.Mx[i]-x)**2 + (self.My[i]-y)**2 + z**2
+            
+            #Magnetic dipole vector of the table magnet
+            m2 = self.mu_dir[i]
+            
+            #Unit vector of relative position (from m2 to m1)
+            ur = np.array( [x-self.Mx[i], y-self.My[i], z] )/np.sqrt(r) 
+            
+            #Sum of the forces
+            Fb = Fb + self.S[i] * ( (m1@m2)*ur + (m2@ur)*m1 + (m1@ur)*m2 - 5*(m1@ur)*(m2@ur)*ur ) / r**2
+        
+        # Save the data of the net magnetic force.
+        self.FF1 = Fb
+        
+        # Finding tension
+        
+        # Unit vector from P to Q
+        uT = -rqp/self.l 
+        
+        # Tension
+        T = (self.m*9.8*(self.l+self.d-z)/self.l - Fb@uT)*uT
+        
+        # Acelerations
+        ax = (Fb[0] - self.R*vx + T[0])/self.m
+        ay = (Fb[1] - self.R*vy + T[1])/self.m
+               
+        return np.array([vx, vy, ax, ay])
+
+    
+    def next_value(self, x,y,vx,vy):
+        """
+        Calculates the next positions and velocities after a time lapse of self.h
+        Find the 4 k-values of the Runge-Kutta method (RK4)
+        @params
+        x,y,vx,vy:
+            doubles of the position and velocity of the pendulum magnet
+
+        @returns
+        xf,yf,vxf,vyf
+            doubles that contains the final positions and velocities of the pendulum magnet
+        """
+        
+        #K1 and calculations
+        k1 = self.h*self.Fk(x,y,vx,vy)
+        x1 = x + k1[0]/2
+        y1 = y + k1[1]/2
+        vx1 = vx + k1[2]/2
+        vy1 = vy + k1[3]/2
+        
+        #Save magnetic Force
+        self.FF2 = self.FF1
+
+        #K2 and calculations
+        k2 = self.h*self.Fk(x1,y1,vx1,vy1)
+        x2 = x + k2[0]/2
+        y2 = y + k2[1]/2
+        vx2 = vx + k2[2]/2
+        vy2 = vy + k2[3]/2
+
+        #K3 and calculations
+        k3 = self.h*self.Fk(x2,y2,vx2,vy2)
+        x2 = x + k2[0]
+        y2 = y + k2[1]
+        vx2 = vx + k2[2]
+        vy2 = vy + k2[3]
+
+        #K4 and calculating final positions
+        k4 = self.h*self.Fk(x2,y2,vx2,vy2)
+        xf = x + 1/6*(k1[0] + 2*k2[0] + 2*k3[0] + k4[0])
+        yf = y + 1/6*(k1[1] + 2*k2[1] + 2*k3[1] + k4[1])
+        vxf = vx + 1/6*(k1[2] + 2*k2[2] + 2*k3[2] + k4[2])
+        vyf = vy + 1/6*(k1[3] + 2*k2[3] + 2*k3[3] + k4[3])
+
+        return np.array([xf, yf, vxf, vyf])
+    
+    #-------------------------------------6. Plot functions---------------------------------------#
+
     def plot_path(self):
         # Plot trajectory
         plt.plot(self.X,self.Y,'-b',linewidth=0.5)
@@ -190,7 +428,7 @@ class pendulum:
     def plot_alltable(self):
         Mx = self.Mx
         My = self.My
-        mu = self.mu_magn * self.sign
+        mu = self.mu_magn
         self.plot_table()
         
         # Plot magnets
@@ -360,109 +598,4 @@ class pendulum:
         ax = plt.axes(projection='3d')
         ax.plot_surface(X,Y,Ug+Um, cmap=cm.jet, edgecolor='none')
             
-    def Fk(self,x,y,vx,vy):
-        """
-        Calculates the velocity and acelerations based on the initial conditions of the magnets 
-        @params
-        mx, my:
-            arrays of doubles that contains the position of the magnets
-        x,y,vx,vy:
-            doubles of the position and velocity of the pendulum magnet
-
-        @returns
-        vx, vy ,ax, ay:
-            doubles that contains the velocity and aceleration based on the given inputs
-        """ 
-        
-        # z component of pendulum magnet
-        z = -np.sqrt(self.l**2-x**2-y**2)+self.l+self.d       
-        
-        # Magnetic dipole vector m1 of pendulum magnet.     
-        
-        # Vector from Q to P
-        rqp = np.array([x,y,z-self.l-self.d])
-        
-        # Sign that indicates the orientation of the pendulum magnet
-        sign = -self.mu_P_dir[2]
-        
-        # Magnetic dipole
-        m1 = sign * rqp/self.l
-        
-        # Finidng the sum of the magnetic forces
-        Fb = np.array([0,0,0])
-        for i in range(self.NMAGNETS):
-            #Squared distance between pendulum and table magnet
-            r = (self.Mx[i]-x)**2 + (self.My[i]-y)**2 + z**2
-            
-            #Magnetic dipole vector of the table magnet
-            m2 = self.mu_dir[i]
-            
-            #Unit vector of relative position (from m2 to m1)
-            ur = np.array( [x-self.Mx[i], y-self.My[i], z] )/np.sqrt(r) 
-            
-            #Sum of the forces
-            Fb = Fb + self.S[i] * ( (m1@m2)*ur + (m2@ur)*m1 + (m1@ur)*m2 - 5*(m1@ur)*(m2@ur)*ur ) / r**2
-        
-        # Save the data of the net magnetic force.
-        self.FF1 = Fb
-        
-        # Finding tension
-        
-        # Unit vector from P to Q
-        uT = -rqp/self.l 
-        
-        # Tension
-        T = (self.m*9.8*(self.l+self.d-z)/self.l - Fb@uT)*uT
-        
-        # Acelerations
-        ax = (Fb[0] - self.R*vx + T[0])/self.m
-        ay = (Fb[1] - self.R*vy + T[1])/self.m
-               
-        return np.array([vx, vy, ax, ay])
-
     
-    def next_value(self, x,y,vx,vy):
-        """
-        Calculates the next positions and velocities after a time lapse of self.h
-        Find the 4 k-values of the Runge-Kutta method (RK4)
-        @params
-        x,y,vx,vy:
-            doubles of the position and velocity of the pendulum magnet
-
-        @returns
-        xf,yf,vxf,vyf
-            doubles that contains the final positions and velocities of the pendulum magnet
-        """
-        
-        #K1 and calculations
-        k1 = self.h*self.Fk(x,y,vx,vy)
-        x1 = x + k1[0]/2
-        y1 = y + k1[1]/2
-        vx1 = vx + k1[2]/2
-        vy1 = vy + k1[3]/2
-        
-        #Save magnetic Force
-        self.FF2 = self.FF1
-
-        #K2 and calculations
-        k2 = self.h*self.Fk(x1,y1,vx1,vy1)
-        x2 = x + k2[0]/2
-        y2 = y + k2[1]/2
-        vx2 = vx + k2[2]/2
-        vy2 = vy + k2[3]/2
-
-        #K3 and calculations
-        k3 = self.h*self.Fk(x2,y2,vx2,vy2)
-        x2 = x + k2[0]
-        y2 = y + k2[1]
-        vx2 = vx + k2[2]
-        vy2 = vy + k2[3]
-
-        #K4 and calculating final positions
-        k4 = self.h*self.Fk(x2,y2,vx2,vy2)
-        xf = x + 1/6*(k1[0] + 2*k2[0] + 2*k3[0] + k4[0])
-        yf = y + 1/6*(k1[1] + 2*k2[1] + 2*k3[1] + k4[1])
-        vxf = vx + 1/6*(k1[2] + 2*k2[2] + 2*k3[2] + k4[2])
-        vyf = vy + 1/6*(k1[3] + 2*k2[3] + 2*k3[3] + k4[3])
-
-        return np.array([xf, yf, vxf, vyf])
