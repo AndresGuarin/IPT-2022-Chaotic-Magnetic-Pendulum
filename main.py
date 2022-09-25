@@ -24,7 +24,7 @@ X, Y, Vx, Vy = p.find_path()
 selfp = p.get_self()
 
 #Plot trajectories
-p.plot_table()              
+p.plot_alltable()              
 p.plot_vector_space(res=30)
 p.plot_path()
 plt.legend(loc='upper right')
