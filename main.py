@@ -8,11 +8,8 @@ of a magnetic pendulum of N magnets. This code was used for a solution of one pr
 in the International Physicists' Tournament (ed. 2022). More info at https://iptnet.info/
 """
 
-import CMPendulum.solver.pendulum as pend
-import CMPendulum.solver.animation as ani
 import matplotlib.pyplot as plt
-
-import CMPendulum.analysis.basins as bs
+from CMPendulum import pendulum as pend, animation as ani, basins as bs
 
 #Put on the console for animation: %matplotlib auto
 
@@ -20,7 +17,7 @@ import CMPendulum.analysis.basins as bs
 p = pend.pendulum()
 
 #Find trajectories
-X, Y, Vx, Vy = p.find_path()
+X, Y, Vx, Vy = p.find_path(show=True)
 selfp = p.get_self()
 
 #Plot trajectories

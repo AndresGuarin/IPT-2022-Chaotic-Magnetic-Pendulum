@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+#from scipy.optimize import curve_fit
 
 def phase_portrait(self, fmt='-', color='red', linewidth=0.8, label='off'):
 

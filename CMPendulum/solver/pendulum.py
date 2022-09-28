@@ -8,10 +8,10 @@ plot functions to visualize the results and understand the solution.
 We implemented the RK4 method to solve the equations of motion. We used the newtonian 
 formalism and consider the magnetic force as the expandend force between two perfect 
 magnetic dipoles. The model implement the friction force and neglict the mass of the 
-pendulum rod. The rod is consider as un-extensible, rigid and massless.
+pendulum rod. The rod is consider as a unextensible, rigid and massless one.
 
 You can use this code writing: 
-    >>> import CMPendulum.solver.pendulum as pend
+    >>> from CMPendulum import pendulum as pend
     >>> p = pend.pendulum()
     >>> X, Y, Vx, Vy = p.find_path()   #Find trajectories
     >>> #Plot solution:
@@ -20,12 +20,12 @@ You can use this code writing:
     >>> p.plot_path()
 """
 
-from matplotlib import cm  #Color maps
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm  #Color maps
 
 class pendulum:
-    # In[] ------------------------------------ 0. Initialize object -----------------------------------#
+    # In[0] ------------------------------------ 0. Initialize object -----------------------------------#
     def __init__(self, show=False):
         # Set predifined values
         self.set_pendulum()          # Set physical parameters
@@ -36,7 +36,7 @@ class pendulum:
             self.summary()
             
             
-    # In[] --------------------------------------1. Create object---------------------------------------#
+    # In[1] --------------------------------------1. Create object---------------------------------------#
     
     # Set Physical parameters
     def set_pendulum(self, l=0.54, d=0.03, R=0.01, m=0.04, mu_P_magn=2.0, mu_P_dir=np.array([0,0,-1]),
@@ -70,7 +70,7 @@ class pendulum:
         self.sec = 1/self.h  #Number of steps that waste one second
     
     
-    # In[] ---------------------------------2. Set initial conditions ----------------------------------#
+    # In[2] ---------------------------------2. Set initial conditions ----------------------------------#
     
     def set_random(self,Nmin=1,Nmax=8, mu=[1.07, 2.05, 1.95, 1.84, 1.64, 1.74, 1.43], 
                    u = [ np.array([0.66, -0.37, 0.65]), np.array([0.31, -0.35, 0.88]),
@@ -171,7 +171,7 @@ class pendulum:
             self.Dphi = Dphi    
         self.coordinates = coordinates
         
-    # In[]---------------------------3. Functions for specific purposes -------------------------------#
+    # In[3]---------------------------3. Functions for specific purposes -------------------------------#
     
     def summary(self):
         print('====================== Summary report ============================')
@@ -250,7 +250,7 @@ class pendulum:
             self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * self.mu_magn
 
 
-    # In[]-------------------------------------4. Get functions----------------------------------------# 
+    # In[4]-------------------------------------4. Get functions----------------------------------------# 
     
     def get_self(self):
         return self
@@ -262,10 +262,10 @@ class pendulum:
         return [self.X[-1], self.Y[-1], self.Vx[-1], self.Vy[-1]]
 
     
-    # In[]----------------------------------5. Solver equation functions-------------------------------#
+    # In[5]----------------------------------5. Solver equation functions-------------------------------#
     
     # Find the next steps for each interval
-    def find_path(self, Return='pos', show=True):
+    def find_path(self, Return='pos', show=False):
         
         # Plot summary
         if show:
@@ -417,7 +417,7 @@ class pendulum:
         return np.array([xf, yf, vxf, vyf])
     
     
-    # In[]-------------------------------------6. Plot functions---------------------------------------#
+    # In[6]-------------------------------------6. Plot functions---------------------------------------#
     
     # Plot trajectory
     def plot_path(self):    

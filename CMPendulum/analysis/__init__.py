@@ -1,2 +1,1 @@
-import CMPendulum.analysis.path
-import CMPendulum.analysis.basins
+from CMPendulum.analysis import basins, path

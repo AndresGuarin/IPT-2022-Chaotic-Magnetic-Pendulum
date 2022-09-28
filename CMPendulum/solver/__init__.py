@@ -1,1 +1,1 @@
-import CMPendulum.solver.pendulum
+from CMPendulum.solver import pendulum, animation
