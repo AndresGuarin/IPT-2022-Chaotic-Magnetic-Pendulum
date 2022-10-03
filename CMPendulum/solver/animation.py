@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-def animate_path(self,save={'on':False}):
+def animate_path(self,save={'on':False}, interval=5):
     """
     @params:
         self: self object that contains the data of 
@@ -31,7 +31,7 @@ def animate_path(self,save={'on':False}):
         # Plot the magnets
         for i in range(self.NMAGNETS):
             ax.plot(self.Mx[i],self.My[i],'or',markersize=10)
-            ax.text(self.Mx[i]-0.02,self.My[i]-0.04,f'{np.round(self.mu_magn[i]*self.sign[i],2)}', fontsize=8)
+            ax.text(self.Mx[i]-0.02,self.My[i]-0.04,f'{np.round(self.mu_magn[i],2)}', fontsize=8)
         
         # Plot initial and final position
         ax.plot(self.X[0],self.Y[0],'Dg',label=f'Initial position ({np.round(self.X[0],3)},{np.round(self.Y[0],3)})', markersize=5)
@@ -43,7 +43,7 @@ def animate_path(self,save={'on':False}):
         FB_xy_mag = np.sqrt(FBx**2+FBy**2)
         
         # Plot net magnetic force vector
-        ax.quiver(self.X[j],self.Y[j],0.25*FBx/FB_xy_mag,0.25*FBy/FB_xy_mag,color='red', label='Net Fb',angles='xy', scale_units='xy', scale=2)
+        ax.quiver(self.X[j],self.Y[j],0.05*FBx/FB_xy_mag,0.05*FBy/FB_xy_mag,color='red', label='Net Fb',angles='xy', scale_units='xy', scale=2)
         
         # Put on legend the Iteration and time of the frame
         ax.plot(0,0,'o',markersize=0, label=f'Iteration {j}')
@@ -67,16 +67,16 @@ def animate_path(self,save={'on':False}):
     plt.legend()
     
     # Approximately Time per each plot
-    f = 1/(0.25) 
+    # f = 1/(0.25) 
     
     # Number of intervals that animation show per frame. Higher 'steps' lower the time of animation. steps < N
-    steps=int(1/(self.h*f)) 
+    # steps=int(1/(self.h*f)) 
     
     # Number of intervals
     N = len(self.X)
     
     # Animate the movement
-    self.ani=animation.FuncAnimation(fig,update,range(10,N,steps), repeat=False) 
+    self.ani=animation.FuncAnimation(fig,update,range(10,N,1), repeat=False, interval=interval) 
     
     if save['on']:
         self.ani.save(save['name'],writer='ffmpeg')

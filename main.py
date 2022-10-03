@@ -9,7 +9,7 @@ in the International Physicists' Tournament (ed. 2022). More info at https://ipt
 """
 
 import matplotlib.pyplot as plt
-from CMPendulum import pendulum as pend, animation as ani, basins as bs
+from CMPendulum import pendulum as pend, animation as ani
 
 #Put on the console for animation: %matplotlib auto
 
@@ -17,11 +17,11 @@ from CMPendulum import pendulum as pend, animation as ani, basins as bs
 p = pend.pendulum()
 
 #Find trajectories
-X, Y, Vx, Vy = p.find_path(show=True)
+X, Y, Vx, Vy = p.find_path()
 selfp = p.get_self()
 
 #Plot trajectories
-p.plot_alltable()              
+p.plot_table()              
 p.plot_vector_space(res=30)
 p.plot_path()
 plt.legend(loc='upper right')
