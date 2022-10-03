@@ -65,8 +65,8 @@ class pendulum:
         
     # Set Code parameters
     def set_code_parameters(self,h=0.01, N=2000):
-        self.h = 0.01        #Time lapse between each step
-        self.N = 2000        #Total number of steps
+        self.h = h        #Time lapse between each step
+        self.N = N        #Total number of steps
         self.sec = 1/self.h  #Number of steps that waste one second
     
     
@@ -277,6 +277,7 @@ class pendulum:
         self.Vx = [self.vx]  # X velocities
         self.Vy = [self.vy]  # Y velocities
         self.FB = []         # Arrays of the net magnetic forces
+        self.B = []          # Arrays of the net magnetic fields
         
         s=self.sec     # Number of steps that waste one second.
         A = int(1.2*s) # Check point 1
@@ -289,6 +290,7 @@ class pendulum:
             next_val = self.next_value(self.X[t],self.Y[t],self.Vx[t],self.Vy[t])
             
             self.FB.append(self.FF2)    # Magnitud magnetic Force B
+            self.B.append(self.BB2)     # Magnitud magnetic Field B
             self.X.append(next_val[0])  # X position
             self.Y.append(next_val[1])  # Y position
             self.Vx.append(next_val[2]) # X velocity
@@ -303,12 +305,13 @@ class pendulum:
         # Find the last net magnetic force
         aux = self.next_value(self.X[-1],self.Y[-1],self.Vx[-1],self.Vy[-1])
         self.FB.append(self.FF1)
+        self.B.append(self.BB1)
         
         # Converting list to arrays
         self.X = np.array(self.X)
         self.Y = np.array(self.Y)
-        self.Vx = np.array(self.Vy)
-        self.Vy = np.array(self.Vx)
+        self.Vx = np.array(self.Vx)
+        self.Vy = np.array(self.Vy)
         
         if show:
             print('find_path has ended')
@@ -342,16 +345,18 @@ class pendulum:
         m1 = sign * rqp/self.l                           # Magnetic dipole vector
         
         # Finding net magnetic force
-        Fb = np.array([0,0,0])
+        Fb = np.array([0,0,0])   # magnetic force
+        B = np.array([0,0,0])    # magnetic field
         for i in range(self.NMAGNETS):
             r = (self.Mx[i]-x)**2 + (self.My[i]-y)**2 + z**2              # Squared distance between pendulum and magnet
             m2 = self.mu_dir[i]                                           # Magnetic dipole vector of the 2nd magnet
             ur = np.array( [x-self.Mx[i], y-self.My[i], z] )/np.sqrt(r)   # Unit vector of relative position (from m2 to m1)
             Fb = Fb + self.S[i] * ( (m1@m2)*ur + (m2@ur)*m1 + (m1@ur)*m2
                                     - 5*(m1@ur)*(m2@ur)*ur ) / r**2       # Sum of the magnetic forces
-        
+            Cm = -(4*np.pi*10**-7 * self.mu_magn[i]) / (4*np.pi)          # C onstants for magnetic field
+            B = B + Cm/r**(3/2) * (m2 - 3*(m2@ur)*ur)                     # Sum of mgnetic field
         self.FF1 = Fb  # For save the data of the net magnetic force.
-        
+        self.BB1 = B
         # Finding tension
         uT = -rqp/self.l                                      # Unit vector from P to Q
         T = (self.m*9.8*(self.l+self.d-z)/self.l - Fb@uT)*uT  # Tension
@@ -369,7 +374,7 @@ class pendulum:
         Find the 4 k-values of the Runge-Kutta method (RK4). The equations used are:
         
         r´ = v
-        v´ = 1/m Fk(r, v)
+        v´ = Fk(r, v)
         r(t0) = r0, v(t0) = v0
         
         where ´ denotes time derivate, r=[x,y], v=[vx,vy]
@@ -390,8 +395,9 @@ class pendulum:
         vx1 = vx + k1[2]/2
         vy1 = vy + k1[3]/2
         
-        #Save magnetic Force
+        #Save magnetic Force and magnetic field
         self.FF2 = self.FF1
+        self.BB2 = self.BB1
 
         #K2 and calculations
         k2 = self.h*self.Fk(x1,y1,vx1,vy1)
@@ -548,11 +554,11 @@ class pendulum:
         
         # Magnetic net forces
         if magnetic:
-            plt.quiver(X,Y,Fx/F_xy_mag,Fy/F_xy_mag, linewidths=4, width=0.0025, angles='xy', scale_units='width', scale=39, label='magnetic forces')                
+            plt.quiver(X,Y,Fx/F_xy_mag,Fy/F_xy_mag, width=0.0025, angles='xy', scale_units='width', scale=39, label='magnetic forces')                
         
         # Tension forces
         if tension:
-            plt.quiver(X,Y,Tx/T_xy_mag, Ty/T_xy_mag, linewidths=4, width=0.0025, angles='xy', scale_units='width', scale=37, label='tension forces')
+            plt.quiver(X,Y,Tx/T_xy_mag, Ty/T_xy_mag, width=0.0025, angles='xy', scale_units='width', scale=37, label='tension forces')
 
     
     # Plot potential of the magnetic and gravitational force
