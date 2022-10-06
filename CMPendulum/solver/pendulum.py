@@ -22,7 +22,7 @@ You can use this code writing:
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import cm  #Color maps
+from numpy import dot, power
 
 class pendulum:
     # In[0] ------------------------------------ 0. Initialize object -----------------------------------#
@@ -109,6 +109,8 @@ class pendulum:
         self.Mx = np.array(self.Mx)
         self.My = np.array(self.My)
         self.Mz = np.zeros(self.NMAGNETS)
+        M = np.array([self.Mx, self.My, self.Mz],dtype=float)
+        self.M = M.T
         
         
         # Set magnet dipoles
@@ -129,7 +131,8 @@ class pendulum:
         
         # Finding force constant
         if self.law=='F1':
-            self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * np.array(self.mu_magn)
+            self.S = 3*10**-7*self.mu_P_magn * np.array(self.mu_magn) 
+            self.Cm = 10**-7*np.array(self.mu_magn)                    # Constants for magnetic field
     
     
     # Set Magnets parameters
@@ -140,10 +143,12 @@ class pendulum:
         self.Mz = np.array(Mz)
         self.mu_magn = mu
         self.mu_dir = u
-        
+        M = np.array([self.Mx, self.My, self.Mz],dtype=float)
+        self.M = M.T
         # Finding force constant
         if self.law=='F1':
-            self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * np.array(self.mu_magn)
+            self.S = 3*10**-7*self.mu_P_magn * np.array(self.mu_magn)
+            self.Cm = 10**-7*np.array(self.mu_magn)                    # Constants for magnetic field
         
     
     # Set initial conditions
@@ -231,7 +236,10 @@ class pendulum:
         self.vy = CI[3]
         self.Mx = Mx
         self.My = My
+        self.Mz = np.aray([0.,0.,0.])
         self.NMAGNETS = len(Mx)
+        M = np.array([self.Mx, self.My, self.Mz],dtype=float)
+        self.M = M.T
         
     def set_physical_parameters(self, m, l, d):
         self.m = m     #Mass of the pendulum
@@ -247,8 +255,8 @@ class pendulum:
 
         # Finding force constant
         if self.model=='F1':
-            self.S = 3*(4*np.pi*10**-7 * self.mu_P_magn) / (4*np.pi * self.m) * self.mu_magn
-
+            self.S = 3*10**-7*self.mu_P_magn * self.mu_magn
+            self.Cm = 10**-7*np.array(self.mu_magn)                    # Constants for magnetic field
 
     # In[4]-------------------------------------4. Get functions----------------------------------------# 
     
@@ -339,31 +347,46 @@ class pendulum:
         vx, vy ,ax, ay:
             doubles that contains the velocity and aceleration based on the given inputs
         """ 
-        z = -np.sqrt(self.l**2-x**2-y**2)+self.l+self.d  # Z position of pendulum
-        rqp = np.array([x,y,z-self.l-self.d])            # Vector from Q (attached point of rod) to P (free point of rod)
-        sign = -self.mu_P_dir[2]                         # Sign that indicates the orientation of the pendulum magnet
-        m1 = sign * rqp/self.l                           # Magnetic dipole vector
+        l = self.l
+        d = self.d
+        m = self.m
+        R = self.R
+        M = self.M
+        S = self.S
+        Cm = self.Cm
+        u_m2 = self.mu_dir
         
+        r_P = np.array([x,y,-np.sqrt(l**2-x**2-y**2)+ l+d]) # Position of pendulum magnet
+        r_Q = np.array([0,0,l+d])                           # Position of the attached point of the rod
+        rqp = r_P - r_Q                                     # Vector from Q to P (free point of rod)
+        sign = -self.mu_P_dir[2]                            # Sign that indicates the orientation of the pendulum magnet
+        m1 = sign * rqp/l                                   # Magnetic dipole vector
+                
         # Finding net magnetic force
-        Fb = np.array([0,0,0])   # magnetic force
-        B = np.array([0,0,0])    # magnetic field
+        Fb = np.array([0.,0.,0.])   # magnetic force
+        B  = np.array([0.,0.,0.])    # magnetic field
+        
         for i in range(self.NMAGNETS):
-            r = (self.Mx[i]-x)**2 + (self.My[i]-y)**2 + z**2              # Squared distance between pendulum and magnet
-            m2 = self.mu_dir[i]                                           # Magnetic dipole vector of the 2nd magnet
-            ur = np.array( [x-self.Mx[i], y-self.My[i], z] )/np.sqrt(r)   # Unit vector of relative position (from m2 to m1)
-            Fb = Fb + self.S[i] * ( (m1@m2)*ur + (m2@ur)*m1 + (m1@ur)*m2
-                                    - 5*(m1@ur)*(m2@ur)*ur ) / r**2       # Sum of the magnetic forces
-            Cm = -(4*np.pi*10**-7 * self.mu_magn[i]) / (4*np.pi)          # C onstants for magnetic field
-            B = B + Cm/r**(3/2) * (m2 - 3*(m2@ur)*ur)                     # Sum of mgnetic field
+            r_mi = M[i]                       # Position of pendulum m_i
+            r_vect = r_P - r_mi                 # Relative position between magnets
+            r = np.linalg.norm(r_vect)          # Distance between magnets
+            ur = r_vect / r                     # Unit vector of relative position (from m2 to m1)
+            m2 = u_m2[i]                        # Magnetic dipole vector of the 2nd magnet
+            
+            Fb += S[i] * (dot(m1,m2)*ur + dot(m2,ur)*m1 +                             # Sum of the magnetic forces
+                          dot(m1,ur)*m2 - 5*dot(m1,ur)*dot(m2,ur)*ur) / power(r,4)            
+            B  += Cm[i] * (3*dot(m2,ur)*ur - m2) / power(r,3)                         # Sum of mgnetic field
         self.FF1 = Fb  # For save the data of the net magnetic force.
         self.BB1 = B
+        
         # Finding tension
-        uT = -rqp/self.l                                      # Unit vector from P to Q
-        T = (self.m*9.8*(self.l+self.d-z)/self.l - Fb@uT)*uT  # Tension
+        uT = -rqp/l                            # Unit vector from P to Q
+        z = r_P[2]                             # Z position of pendulum magnet
+        T = (m*9.8*(l+d-z)/l - dot(Fb,uT))*uT  # Tension
         
         # Computes acelerations
-        ax = (Fb[0] - self.R*vx + T[0])/self.m  # (Magnetic Force) - (Friction Force) + (Tension), all over mass pendulum
-        ay = (Fb[1] - self.R*vy + T[1])/self.m
+        ax = (Fb[0] - R*vx + T[0])/m  # (Magnetic Force) - (Friction Force) + (Tension), all over mass pendulum
+        ay = (Fb[1] - R*vy + T[1])/m
                
         return np.array([vx, vy, ax, ay])
 
@@ -559,64 +582,4 @@ class pendulum:
         # Tension forces
         if tension:
             plt.quiver(X,Y,Tx/T_xy_mag, Ty/T_xy_mag, width=0.0025, angles='xy', scale_units='width', scale=37, label='tension forces')
-
-    
-    # Plot potential of the magnetic and gravitational force
-    def plot_potential(self,res=20, a=0):
-        
-        # Put limits of plot
-        if a==0:
-            a = self.lim_vs #predifined value
-        elif a > self.l:
-            a = self.l/2 #Ensure that the points are ploted in the zone inside the spheric pendulum
-        
-        # Create data of the plot
-        t   = np.linspace(-a,a,res)
-        NUM = len(t)
-        X,Y = np.meshgrid(t,t)
-        Z   = -np.sqrt(self.l**2 - X**2 - Y**2)+self.l+self.d
-
-        # Finding magnetic field B
-        Bx = np.zeros((NUM,NUM))
-        By = np.zeros((NUM,NUM))
-        Bz = np.zeros((NUM,NUM))
-        
-        # Iterating over each table magnet
-        for i in range(self.NMAGNETS):
-            R = (self.Mx[i]-X)**2 + (self.My[i]-Y)**2 + Z**2   # Squared distance between magnet i and the pendulum magnet
-        
-            #Table magnet constants
-            m2 = self.mu_dir[i]
-            Cm = -(4*np.pi*10**-7 * self.mu_magn[i]) / (4*np.pi)
-            
-            #Unit vector from m2 (on table) to m1 (in pendulum)
-            Ur_x = (X-self.Mx[i])/np.sqrt(R) #X component
-            Ur_y = (Y-self.My[i])/np.sqrt(R) #Y component 
-            Ur_z = Z/np.sqrt(R)              #Z component 
-            
-            #Dot products
-            M2r = m2[0]*Ur_x + m2[1]*Ur_y + m2[2]*Ur_z  #Dot products between m2 and ur
-            
-            #Sum contributions of all magnets
-            Bx = Bx + Cm/R**(3/2) * (m2[0] - 3*M2r*Ur_x)
-            By = By + Cm/R**(3/2) * (m2[1] - 3*M2r*Ur_y)
-            Bz = Bz + Cm/R**(3/2) * (m2[2] - 3*M2r*Ur_z)
-        
-        ## Finding magnetic potential
-        
-        # Unit vector from Q to P (direction of m1)
-        Um1_x = X/self.l                 #X component  
-        Um1_y = Y/self.l                 #Y component 
-        Um1_z = (Z-self.l-self.d)/self.l #Z component 
-        
-        m1 = self.mu_P_magn                         # Pendulum magnet constants
-        Um = -m1 * (Um1_x*Bx + Um1_y*By + Um1_z*Bz) # Magnetic potential
-        Ug = self.m*9.8*(Z-self.d)                  # Gravitational potential
-        
-        # Plot potential
-        plt.figure(figsize=(5,4))
-        ax = plt.axes(projection='3d')
-        ax.plot_surface(X,Y,Ug+Um, cmap=cm.jet, edgecolor='none')
-        
-        
         
