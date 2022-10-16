@@ -66,21 +66,21 @@ def potential(self,res=20, a=0):
     ax.plot_surface(X,Y,Ug+Um, cmap=cm.jet, edgecolor='none')
 
 # Table of Potential, Kinetic, and Mechanical Energy
-def main_energy_evol(selfp):
+def table_energy_evol(self):
     # Pendulum constants
-    m = selfp.m; d = selfp.d; l = selfp.l
+    m = self.m; d = self.d; l = self.l
     # Positions
-    X = selfp.X; Y = selfp.Y; Z = - np.sqrt(l**2 - X**2 - Y**2) + (l+d)
+    X = self.X; Y = self.Y; Z = - np.sqrt(l**2 - X**2 - Y**2) + (l+d)
     # Velocities
-    Vx = selfp.Vx; Vy = selfp.Vy; Vz = (X*Vx+Y*Vy)/(l+d-Z)
+    Vx = self.Vx; Vy = self.Vy; Vz = (X*Vx+Y*Vy)/(l+d-Z)
     # Mgnetic dipoles constants and vector
-    m1 = selfp.mu_P_magn
+    m1 = self.mu_P_magn
     Um1_x = X/l; Um1_y = Y/l; Um1_z = (Z-l-d)/l           
-    NINTERVALS = len(selfp.B)   # Number of steps
+    NINTERVALS = len(self.B)   # Number of steps
     # Magnetic Fields
-    Bx = np.array([selfp.B[i][0] for i in range(NINTERVALS)])
-    By = np.array([selfp.B[i][1] for i in range(NINTERVALS)])
-    Bz = np.array([selfp.B[i][2] for i in range(NINTERVALS)])
+    Bx = np.array([self.B[i][0] for i in range(NINTERVALS)])
+    By = np.array([self.B[i][1] for i in range(NINTERVALS)])
+    Bz = np.array([self.B[i][2] for i in range(NINTERVALS)])
     # Potentials
     Ug = m*9.8*(Z-d)
     Um = -m1 * (Um1_x*Bx + Um1_y*By + Um1_z*Bz)
@@ -90,7 +90,7 @@ def main_energy_evol(selfp):
     K = 0.5*m*(Vx**2+Vy**2+Vz**2)
     # Plot Energies
     plt.figure(figsize=(15,4))
-    t = np.linspace(0, NINTERVALS*selfp.h, NINTERVALS)
+    t = np.linspace(0, NINTERVALS*self.h, NINTERVALS)
     plt.title('Energies of the system', fontsize = 15)
     
     plt.subplot(131)
@@ -110,21 +110,21 @@ def main_energy_evol(selfp):
     plt.legend(fontsize=10); plt.xticks(size = 10);  plt.yticks(size = 10)
     
 # Plot Potential and Kinetic Energy
-def energy_evol(selfp, potential=True, Um_plot=False, Ug_plot=False, kinetic=True):
+def energy_evol_1(self, potential=True, Um_plot=False, Ug_plot=False, kinetic=True):
     # Pendulum constants
-    m = selfp.m; d = selfp.d; l = selfp.l
+    m = self.m; d = self.d; l = self.l
     # Positions
-    X = selfp.X; Y = selfp.Y; Z = - np.sqrt(l**2 - X**2 - Y**2) + (l+d)
+    X = self.X; Y = self.Y; Z = - np.sqrt(l**2 - X**2 - Y**2) + (l+d)
     # Velocities
-    Vx = selfp.Vx; Vy = selfp.Vy; Vz = (X*Vx+Y*Vy)/(l+d-Z)
+    Vx = self.Vx; Vy = self.Vy; Vz = (X*Vx+Y*Vy)/(l+d-Z)
     # Mgnetic dipoles constants and vector
-    m1 = selfp.mu_P_magn
+    m1 = self.mu_P_magn
     Um1_x = X/l; Um1_y = Y/l; Um1_z = (Z-l-d)/l           
-    NINTERVALS = len(selfp.B)   # Number of steps
+    NINTERVALS = len(self.B)   # Number of steps
     # Magnetic Fields
-    Bx = np.array([selfp.B[i][0] for i in range(NINTERVALS)])
-    By = np.array([selfp.B[i][1] for i in range(NINTERVALS)])
-    Bz = np.array([selfp.B[i][2] for i in range(NINTERVALS)])
+    Bx = np.array([self.B[i][0] for i in range(NINTERVALS)])
+    By = np.array([self.B[i][1] for i in range(NINTERVALS)])
+    Bz = np.array([self.B[i][2] for i in range(NINTERVALS)])
     # Potentials
     Ug = m*9.8*(Z-d)
     Um = -m1 * (Um1_x*Bx + Um1_y*By + Um1_z*Bz)
@@ -135,7 +135,7 @@ def energy_evol(selfp, potential=True, Um_plot=False, Ug_plot=False, kinetic=Tru
     
     # Plot Energies
     plt.figure(figsize=(6,5))
-    t = np.linspace(0, NINTERVALS*selfp.h, NINTERVALS)
+    t = np.linspace(0, NINTERVALS*self.h, NINTERVALS)
     plt.title('Energies of the system', fontsize = 15)
     if potential:
         plt.plot(t,U,'-',color='orange',label = 'Potential Energy',lw=1.2)
@@ -148,6 +148,15 @@ def energy_evol(selfp, potential=True, Um_plot=False, Ug_plot=False, kinetic=Tru
     plt.ylabel('Potential Energy [J]', fontsize = 12); plt.xlabel('Time [s]', fontsize = 12)
     plt.legend(fontsize=10); plt.xticks(size = 10);  plt.yticks(size = 10)
     
-    
+def path3D(self):
+    X = self.X
+    Y = self.Y
+    d = self.d
+    l = self.l
+    Z = - np.sqrt(l**2 - X**2 - Y**2) + (l+d)
+    plt.figure(figsize=(5,4))
+    ax = plt.axes(projection='3d')
+    ax.plot3D(X,Y,Z,'gray')
+
     
     
