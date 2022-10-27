@@ -10,6 +10,7 @@ in the International Physicists' Tournament (ed. 2022). More info at https://ipt
 
 import matplotlib.pyplot as plt
 from CMPendulum import pendulum as pend, animation as ani
+from CMPendulum.analysis import plot_solutions as plot_
 
 #Put on the console for animation: %matplotlib auto
 
@@ -21,8 +22,8 @@ X, Y, Vx, Vy = p.find_path()
 selfp = p.get_self()
 
 #Plot trajectories
-p.plot_table()              
-p.plot_vector_space(res=30)
+plot_.table()              
+plot_.vector_space(res=30)
 p.plot_path()
 plt.legend(loc='upper right')
 plt.savefig('Images/path.png',dpi=200); plt.show()
@@ -32,10 +33,10 @@ ani.animate_path(selfp)
 plt.show()
 
 #Plot potential, table,...
-p.plot_potential(res=50)
+plot_.potential(res=50)
 plt.savefig('Images/potential.png',dpi=200); plt.show()
 
-p.plot_alltable()
+plot_.alltable()
 plt.legend(loc='upper right')
 plt.savefig('Images/alltable.png',dpi=200); plt.show()
 

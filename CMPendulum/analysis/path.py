@@ -1,55 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-#from scipy.optimize import curve_fit
-
-def phase_portrait(self, fmt='-', color='red', linewidth=0.8, label='off'):
-
-    # Get positions and velocity
-    X=self.X
-    Y=self.Y
-    Vx=self.Vx
-    Vy=self.Vy
-    V = np.sqrt(Vx**2+Vy**2)*np.sign(Vy) #With sign
-
-    # Create projection 3d
-    plt.figure(figsize=(5,5))
-    ax = plt.axes(projection='3d')
-
-    # Plot phase portrait
-    if label == 'off':
-        plt.plot(X,Y,V,fmt,color=color,linewidth=linewidth)
-    else:
-        plt.plot(X,Y,V,fmt,color=color,linewidth=linewidth,label=label)
-    # Put tilte and labels
-    plt.title('Phase portrait 3D', fontsize=15)
-    plt.xlabel('X [m]',fontsize=12)
-    plt.ylabel('Y [m]',fontsize=12)
-    ax.set_zlabel('Z [m]',fontsize=12)
-    plt.legend()
-
-def time_series(self,fmt='-',color='blue',linewidth=0.8,alpha=1, label='off'):
-    plt.figure(figsize=(5,5))
-
-    X=self.X
-
-    # Create time array
-    t=np.linspace(0,self.h*self.N,len(X))
-
-    # Plot time series
-    if label=='off':
-        plt.plot(t,X,fmt,color,linewidth=linewidth,alpha=alpha)
-    else:
-        plt.plot(t,X,fmt,color,linewidth=linewidth,alpha=alpha, label=label)
-        plt.legend()
-        
-    # Put the title and labels
-    plt.title('Time series of X',fontsize=15)
-    plt.xlabel('Time [s]',fontsize=12)
-    plt.ylabel('X [m]',fontsize=12)
-    plt.xticks(fontsize=9); plt.yticks(fontsize=9)
+from scipy.optimize import curve_fit
 
 class lyapunov:
-    def __init__(self):
+    def __init__(self, ):
         pass
 
     def plot_differences(self, selfp, kind='log'):
