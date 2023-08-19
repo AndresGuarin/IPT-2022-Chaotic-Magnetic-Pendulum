@@ -6,3 +6,12 @@ You can find:
 * Library CMPendulum that contains all the codes.
 * Figures of the main results of the project.
 * Etc.
+
+Autors list:
+* Juan Andrés Guarín Rojas
+* Juan Diego Figueroa Hernandéz
+* José David Garavito Barragán
+* Ángela Barajas Ochoa
+* Gabriela Sánchez Ariza
+* Brayan Barajas Ochoa
+* Luis Alberto Nuñez de Villavicencio
